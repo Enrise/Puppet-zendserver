@@ -1,9 +1,9 @@
-ZendServer
+zendserver
 ----------
 
 This is the zendserver module for [Puppet](http://puppetlabs.com/);
 
-Supported Zend Server versions:
+Supported [Zend Server](http://www.zend.com/en/products/server/) versions:
 
 * Zend Server 5.6
 * Zend Server 6 Beta
