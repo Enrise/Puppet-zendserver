@@ -22,10 +22,7 @@ class zendserver (
   package { "zend-server" :
     name => "zend-server-php-${php_version}",
     ensure => present,
-    require => [
-      Apt::Repository["zend-server"],
-#      Exec["aptget_update"],
-    ],
+    require => Class["zendserver::package"],
   }
   
   #
@@ -37,7 +34,7 @@ class zendserver (
 
   file { "zend-path" :
     path   => "/etc/profile.d/zend.sh",
-    source => "puppet:///modules/zendserver/zend.sh",
+    source => "puppet:///modules/zendserver/path.sh",
     owner  => "root",
     group  => "root",
     mode   => 0644,
