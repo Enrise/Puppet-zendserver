@@ -98,7 +98,7 @@ class zendserver (
   #
   # Firewall
   #
-  if $apache::bool_firewall == true {
+  if $zendserver::bool_firewall == true {
     firewall { "zendserver_tcp_10081":
       source        => $zendserver::firewall_src,
       destination   => $zendserver::firewall_dst,
