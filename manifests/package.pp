@@ -19,4 +19,5 @@ class zendserver::package (
     key       => true,
     key_url   => 'http://repos.zend.com/zend.key',
   }
+
 }

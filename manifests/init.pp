@@ -52,7 +52,7 @@ class zendserver (
   }
 
   file { "/usr/local/zend/var/log":
-    ensure => "link",
+    ensure => link,
     target => "/var/log/zend/zendserver",
     force => true,
     require => [
@@ -62,7 +62,7 @@ class zendserver (
   }
 
   file { "/usr/local/zend/tmp":
-    ensure => "link",
+    ensure => link,
     target => "/tmp",
     force => true,
     require => [
