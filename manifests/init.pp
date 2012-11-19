@@ -16,15 +16,10 @@ class zendserver (
     
 
   class { 'zendserver::package' :
-    version => $version,
+    version     => $version,
+    php_version => $php_version,
   }
 
-  package { "zend-server" :
-    name => "zend-server-php-${php_version}",
-    ensure => present,
-    require => Class["zendserver::package"],
-  }
-  
   #
   # If Zend cannot get its paths right, we will!
   # Symlink /usr/local/zend/var/log to /var/log/zend/zendserver
@@ -66,7 +61,7 @@ class zendserver (
     target => "/tmp",
     force => true,
     require => [
-      Package["zend-server"],
+      Class["zendserver::package"],
       Exec['mv /usr/local/zend/tmp/* /tmp/'],
     ]
   }
@@ -74,14 +69,14 @@ class zendserver (
   exec { "mv /usr/local/zend/tmp/* /tmp/":
     onlyif => "/bin/sh -c '[ ! -h /usr/local/zend/tmp ]'",
     require => [
-      Package["zend-server"]
+      Class["zendserver::package"],
     ]
   }
   
   exec { "mv /usr/local/zend/var/log/* /var/log/zend/zendserver/":
     onlyif => "/bin/sh -c '[ ! -h /usr/local/zend/var/log ]'",
     require => [
-      File["/var/log/zend/zendserver"],
+      Class["zendserver::package"],
     ]
   }
 
@@ -91,7 +86,7 @@ class zendserver (
     ensure => directory,
     mode   => 775,
     require => [
-      Package["zend-server"]
+      Class["zendserver::package"],
     ]
   }
 

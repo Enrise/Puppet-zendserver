@@ -12,6 +12,7 @@ project_page 'http://www.github.com/Enrise/Puppet-Zendserver'
 dependency 'lab42/apt', '>= 0.1.9'
 dependency 'lab42/common', '>= 0.1.0'
 dependency 'lab42/puppi', '>= 0.1.0'
+dependency 'lab42/php', '>= 2.0'
 dependency 'lab42/monitor', '>= 0.1.0', optional
 dependency 'lab42/backup', '>= 0.1.0', optional
 dependency 'lab42/firewall', '>= 0.1.0', optional
