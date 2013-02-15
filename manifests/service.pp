@@ -6,5 +6,6 @@ class zendserver::service {
         hasrestart => true,
         enable => "true",
         require => Class["zendserver"],
+        provider => "init",
     }
 }
