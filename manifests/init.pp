@@ -15,80 +15,81 @@ class zendserver (
   }
     
 
-  class { 'zendserver::package' :
-    version     => $version,
-    php_version => $php_version,
-  }
+    class { 'zendserver::package' :
+      version     => $version,
+      php_version => $php_version,
+    }
 
-  #
-  # If Zend cannot get its paths right, we will!
-  # Symlink /usr/local/zend/var/log to /var/log/zend/zendserver
-  # Symlink /usr/local/zend/tmp to /tmp
-  # Add /usr/local/zend/bin to the PATH environment variable
-  #
+    ->
 
-  file { "zend-path" :
-    path   => "/etc/profile.d/zend.sh",
-    source => "puppet:///modules/zendserver/path.sh",
-    owner  => "root",
-    group  => "root",
-    mode   => 0644,
-  }
+    exec {"zendserver_aptgetupdate":
+        command   => "apt-get update"
+    }
 
-  file { "/var/log/zend/zendserver":
-    owner  => www-data,
-    group  => zend,
-    ensure => directory,
-    mode   => 775,
-    force => true,
-    require => [
-      File["/var/log/zend"]
-    ]
-  }
+    ->
 
-  file { "/usr/local/zend/var/log":
-    ensure => link,
-    target => "/var/log/zend/zendserver",
-    force => true,
-    require => [
-      File["/var/log/zend/zendserver"],
-      Exec["mv /usr/local/zend/var/log/* /var/log/zend/zendserver/"]
-    ],
-  }
+    class { "php":
+      package     => "zend-server-php-${php_version}",
+      config_dir  => "/usr/local/zend/etc/",
+      config_file => "/usr/local/zend/etc/php.ini",
+      config_file_group => "zend"
+    }
+
+    ->
+
+    class { "php::pear":
+      package         => "zend-server-php-${php_version}",
+      install_package => false,
+      path            => '/usr/local/zend/bin:/usr/bin:/usr/sbin:/bin:/sbin',
+    }
+
+    ->
+
+    file { "zend-path" :
+      path   => "/etc/profile.d/zend.sh",
+      source => "puppet:///modules/zendserver/path.sh",
+      owner  => "root",
+      group  => "root",
+      mode   => 0644,
+    }
+
+    ->
+
+    file { "/var/log/zend":
+      owner  => zend,
+      group  => zend,
+      ensure => directory,
+      mode   => 775,
+    }
+
+    ->
+
+    exec { "mv /usr/local/zend/var/log /var/log/zend/zendserver":
+      onlyif => "/bin/sh -c '[ -d /usr/local/zend/var/log -a ! -h /usr/local/zend/var/log ]'",
+    }
+
+    ->
+
+    file { "/usr/local/zend/var/log":
+      ensure => link,
+      target => "/var/log/zend/zendserver",
+      force => true,
+    }
+
+    ->
+
+    exec { "mv /usr/local/zend/tmp/* /tmp/":
+      onlyif => "/bin/sh -c '[ -d /usr/local/zend/tmp -a ! -h /usr/local/zend/tmp ]'",
+    }
+
+    ->
 
   file { "/usr/local/zend/tmp":
     ensure => link,
     target => "/tmp",
     force => true,
-    require => [
-      Class["zendserver::package"],
-      Exec['mv /usr/local/zend/tmp/* /tmp/'],
-    ]
-  }
-  
-  exec { "mv /usr/local/zend/tmp/* /tmp/":
-    onlyif => "/bin/sh -c '[ ! -h /usr/local/zend/tmp ]'",
-    require => [
-      Class["zendserver::package"],
-    ]
-  }
-  
-  exec { "mv /usr/local/zend/var/log/* /var/log/zend/zendserver/":
-    onlyif => "/bin/sh -c '[ ! -h /usr/local/zend/var/log ]'",
-    require => [
-      Class["zendserver::package"],
-    ]
   }
 
-  file { "/var/log/zend":
-    owner  => zend,
-    group  => zend,
-    ensure => directory,
-    mode   => 775,
-    require => [
-      Class["zendserver::package"],
-    ]
-  }
 
   #
   # Firewall
