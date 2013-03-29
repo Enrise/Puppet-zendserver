@@ -24,6 +24,7 @@ class zendserver (
 
     exec {"zendserver_aptgetupdate":
         command   => "apt-get update"
+        onlyif    => '/bin/bash -c x=$(apt-cache policy | grep \'${zendserver::package::repo}\' | wc -l); test "$x" = "0"'
     }
 
     ->
