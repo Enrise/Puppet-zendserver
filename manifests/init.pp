@@ -1,11 +1,11 @@
 class zendserver (
-  $version             = 6.0,
-  $php_version         = 5.4,
+  $version             = params_lookup( 'version' ),
+  $php_version         = params_lookup( 'php_version', 'global' ),
   $firewall            = params_lookup( 'firewall' , 'global' ),
   $firewall_tool       = params_lookup( 'firewall_tool' , 'global' ),
   $firewall_src        = params_lookup( 'firewall_src' , 'global' ),
   $firewall_dst        = params_lookup( 'firewall_dst' , 'global' ),
-  ) {
+  ) inherits zendserver::params {
    
   $bool_firewall=any2bool($firewall)
   if $zendserver::bool_absent == true or $zendserver::bool_disable == true {
@@ -13,77 +13,81 @@ class zendserver (
   } else {
     $manage_firewall = true
   }
-    
 
-    class { 'zendserver::package' :
-      version     => $version,
-      php_version => $php_version,
-    }
+  # zend-server-php-5.4
+  $package = "zend-server-php-${php_version}"
 
-    ->
+  class { 'zendserver::package' :
+    version     => $version,
+    php_version => $php_version,
+  }
 
-    exec {"zendserver_aptgetupdate":
-        command   => "apt-get update"
-        onlyif    => '/bin/bash -c x=$(apt-cache policy | grep \'${zendserver::package::repo}\' | wc -l); test "$x" = "0"'
-    }
+  ->
 
-    ->
+  exec {"zendserver_aptgetupdate":
+    command   => "apt-get update",
+    onlyif    => "/bin/bash -c 'x=\$(apt-cache madison ${zendserver::package} | \
+                  grep \"${zendserver::package::repo}\" | wc -l); test \"\$x\" = \"0\" -a \"\$x\" != \"\" '"
+  }
 
-    class { "php":
-      package     => "zend-server-php-${php_version}",
-      config_dir  => "/usr/local/zend/etc/",
-      config_file => "/usr/local/zend/etc/php.ini",
-      config_file_group => "zend"
-    }
+  ->
 
-    ->
+  class { "php":
+    version     => "${version}.*",
+    package     => $package,
+    config_dir  => "/usr/local/zend/etc/",
+    config_file => "/usr/local/zend/etc/php.ini",
+    config_file_group => "zend"
+  }
 
-    class { "php::pear":
-      package         => "zend-server-php-${php_version}",
-      install_package => false,
-      path            => '/usr/local/zend/bin:/usr/bin:/usr/sbin:/bin:/sbin',
-    }
+  ->
 
-    ->
+  class { "php::pear":
+    package         => "zend-server-php-${php_version}",
+    install_package => false,
+    path            => '/usr/local/zend/bin:/usr/bin:/usr/sbin:/bin:/sbin',
+  }
 
-    file { "zend-path" :
-      path   => "/etc/profile.d/zend.sh",
-      source => "puppet:///modules/zendserver/path.sh",
-      owner  => "root",
-      group  => "root",
-      mode   => 0644,
-    }
+  ->
 
-    ->
+  file { "zend-path" :
+    path   => "/etc/profile.d/zend.sh",
+    source => "puppet:///modules/zendserver/path.sh",
+    owner  => "root",
+    group  => "root",
+    mode   => 0644,
+  }
 
-    file { "/var/log/zend":
-      owner  => zend,
-      group  => zend,
-      ensure => directory,
-      mode   => 775,
-    }
+  ->
 
-    ->
+  file { "/var/log/zend":
+    owner  => zend,
+    group  => zend,
+    ensure => directory,
+    mode   => 775,
+  }
 
-    exec { "mv /usr/local/zend/var/log /var/log/zend/zendserver":
-      onlyif => "/bin/sh -c '[ -d /usr/local/zend/var/log -a ! -h /usr/local/zend/var/log ]'",
-    }
+  ->
 
-    ->
+  exec { "mv /usr/local/zend/var/log /var/log/zend/zendserver":
+    onlyif => "/bin/sh -c '[ -d /usr/local/zend/var/log -a ! -h /usr/local/zend/var/log ]'",
+  }
 
-    file { "/usr/local/zend/var/log":
-      ensure => link,
-      target => "/var/log/zend/zendserver",
-      force => true,
-    }
+  ->
 
-    ->
+  file { "/usr/local/zend/var/log":
+    ensure => link,
+    target => "/var/log/zend/zendserver",
+    force => true,
+  }
 
-    exec { "mv /usr/local/zend/tmp/* /tmp/":
-      onlyif => "/bin/sh -c '[ -d /usr/local/zend/tmp -a ! -h /usr/local/zend/tmp ]'",
-    }
+  ->
 
-    ->
+  exec { "mv /usr/local/zend/tmp/* /tmp/":
+    onlyif => "/bin/sh -c '[ -d /usr/local/zend/tmp -a ! -h /usr/local/zend/tmp ]'",
+  }
+
+  ->
 
   file { "/usr/local/zend/tmp":
     ensure => link,
