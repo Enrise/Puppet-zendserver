@@ -8,9 +8,8 @@ class zendserver::package (
 
   case $version {
     'UNSET',
-    '6.0':         { $repo = "http://repos.zend.com/zend-server/6.0/deb" }
     '5.6':         { $repo = "http://repos.zend.com/zend-server/deb" }
-    default:       { raise Puppet::ParseError, "Unknown Zend Server version specified." }
+    default:       { $repo = "http://repos.zend.com/zend-server/$version/deb" }
   }
 
   apt::repository { "zend-server":
